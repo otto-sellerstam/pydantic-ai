@@ -161,7 +161,7 @@ def is_set(t_or_unset: T | Unset) -> TypeGuard[T]:
 
 
 @asynccontextmanager
-async def group_by_temporal(
+async def group_by_temporal(  # noqa: C901
     aiterable: AsyncIterable[T], soft_max_interval: float | None
 ) -> AsyncIterator[AsyncIterable[list[T]]]:
     """Group items from an async iterable into lists based on time interval between them.
@@ -249,14 +249,21 @@ async def group_by_temporal(
                 buffer = []
                 group_start_time = None
 
+    # Track if we're being closed via GeneratorExit - in that case we can't await
+    closing = False
     try:
         yield async_iter_groups()
+    except GeneratorExit:
+        closing = True
+        raise
     finally:  # pragma: no cover
         # after iteration if a tasks still exists, cancel it, this will only happen if an error occurred
         if task:
             task.cancel('Cancelling due to error in iterator')
-            with suppress(asyncio.CancelledError):
-                await task
+            # Don't await if we're being closed - can't await in a closing async generator
+            if not closing:
+                with suppress(asyncio.CancelledError, StopAsyncIteration):
+                    await task
 
 
 def sync_anext(iterator: Iterator[T]) -> T:

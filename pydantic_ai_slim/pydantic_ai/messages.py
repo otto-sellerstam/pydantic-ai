@@ -1286,6 +1286,15 @@ class ModelResponse:
     metadata: dict[str, Any] | None = None
     """Additional data that can be accessed programmatically by the application but is not sent to the LLM."""
 
+    incomplete: bool = False
+    """Whether the response was cancelled/incomplete.
+
+    When True, the response may contain partial data:
+    - Text parts may be truncated mid-sentence
+    - Tool calls may have incomplete arguments (partial JSON)
+    - Usage statistics may be incomplete
+    """
+
     @property
     def text(self) -> str | None:
         """Get the text in the response."""
