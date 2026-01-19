@@ -766,7 +766,8 @@ class GeminiStreamedResponse(StreamedResponse):
         """Cancel the streaming response and close the underlying HTTP connection."""
         await super().cancel()
         if self._stream_to_close is not None:
-            # The Google SDK returns an AsyncGenerator (which has aclose) but annotates it as AsyncIterator
+            # google.genai.types.AsyncGenerateContentResponse is typed as AsyncIterator but is actually
+            # an AsyncGenerator at runtime
             await self._stream_to_close.aclose()  # type: ignore[attr-defined]
 
     async def _get_event_iterator(self) -> AsyncIterator[ModelResponseStreamEvent]:  # noqa: C901

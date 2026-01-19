@@ -229,8 +229,7 @@ class AgentStream(Generic[AgentDepsT, OutputDataT]):
                     yield '\n\n', event.index
                     last_text_index = None
         except Exception:
-            # When cancelled, the HTTP stream is forcefully closed which causes read errors.
-            # Return cleanly so group_by_temporal can clean up properly.
+            # Closing the stream mid-read can raise exceptions
             if self._cancelled:
                 return
             raise
@@ -340,8 +339,7 @@ class AgentStream(Generic[AgentDepsT, OutputDataT]):
                             break
                         yield event
                 except Exception:
-                    # When cancelled, the HTTP stream is forcefully closed which causes read errors.
-                    # Return cleanly to allow proper cleanup.
+                    # Closing the stream mid-read can raise exceptions
                     if self._cancelled:
                         return
                     raise

@@ -474,7 +474,8 @@ class HuggingFaceStreamedResponse(StreamedResponse):
         """Cancel the streaming response and close the underlying HTTP connection."""
         await super().cancel()
         if self._stream_to_close is not None:
-            # The HuggingFace SDK returns an AsyncGenerator (which has aclose) but annotates it as AsyncIterable
+            # huggingface_hub.AsyncInferenceClient.chat.completions.create is typed as AsyncIterable but
+            # returns an AsyncGenerator at runtime
             await self._stream_to_close.aclose()  # type: ignore[attr-defined]
 
     async def _get_event_iterator(self) -> AsyncIterator[ModelResponseStreamEvent]:
