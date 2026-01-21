@@ -847,7 +847,7 @@ agent = Agent('openai:gpt-5')
 async def main():
     async with agent.run_stream('Write a long story about a cat') as result:
         chunks = []
-        async for text in result.stream_text(delta=True, debounce_by=None):
+        async for text in result.stream_text(delta=True):
             chunks.append(text)
             if len(''.join(chunks)) > 100:  # Stop after 100 characters
                 await result.cancel()
@@ -866,10 +866,13 @@ When a stream is cancelled:
 - The underlying HTTP connection is closed (stopping token generation)
 - The response is marked with `incomplete=True`
 - The incomplete response is added to [`all_messages()`][pydantic_ai.result.StreamedRunResult.all_messages] for conversation continuity
-- Partial usage is tracked for billing visibility
+- Usage data received before cancellation is preserved via [`usage()`][pydantic_ai.result.StreamedRunResult.usage]
 
 !!! note
     Calling [`cancel()`][pydantic_ai.result.StreamedRunResult.cancel] multiple times is safe (idempotent). The cancellation is immediate — no further events will be yielded after calling `cancel()`.
+
+!!! info "Usage tracking for cancelled streams"
+    Usage information may be incomplete for cancelled streams. Most providers send final token counts at the end of the stream, which won't be received after cancellation. The [`usage()`][pydantic_ai.result.StreamedRunResult.usage] method returns whatever usage data arrived before the stream was cancelled.
 
 _(This example is complete, it can be run "as is" — you'll need to add `asyncio.run(main())` to run `main`)_
 
