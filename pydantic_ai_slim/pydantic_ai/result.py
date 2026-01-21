@@ -339,7 +339,7 @@ class AgentStream(Generic[AgentDepsT, OutputDataT]):
                             break
                         yield event
                 except Exception:
-                    # Closing the stream mid-read can raise exceptions
+                    # Closing the stream mid-read can raise exceptions. Reraise if not cancelled.
                     if self._cancelled:
                         return
                     raise
