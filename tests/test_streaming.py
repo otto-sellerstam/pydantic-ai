@@ -5443,8 +5443,12 @@ class TestStreamEventsContextManager:
             async for event in agent.run_stream_events('Hello'):
                 events.append(event)
 
-        assert any(isinstance(e, AgentRunResultEvent) for e in events)
-        result_event: AgentRunResultEvent[str] = next(e for e in events if isinstance(e, AgentRunResultEvent))
+        result_event = None
+        for e in events:
+            if isinstance(e, AgentRunResultEvent):
+                result_event = e
+                break
+        assert result_event is not None
         assert result_event.result.output == snapshot('success (no tool calls)')
 
     async def test_standalone_iteration_break(self):

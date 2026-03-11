@@ -292,7 +292,7 @@ class UIAdapter(ABC, Generic[RunInputT, MessageT, EventT, AgentDepsT, OutputData
         )
         # Suppress the standalone iteration deprecation warning — the adapter
         # manages the stream lifecycle internally via the HTTP response.
-        result._suppress_standalone_warning = True
+        result.suppress_standalone_warning = True
         return result
 
     def run_stream(
