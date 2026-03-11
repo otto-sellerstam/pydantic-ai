@@ -330,7 +330,7 @@ async def test_complex_agent_run_in_workflow(allow_model_requests: None, dbos: D
                             children=[
                                 BasicSpan(content='ctx.run_step=1'),
                                 BasicSpan(
-                                    content='{"part":{"tool_name":"get_country","args":"{}","tool_call_id":"call_3rqTYrA6H21AYUaRGP4F66oq","id":null,"provider_name":null,"provider_details":null,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
+                                    content='{"part":{"tool_name":"get_country","args":"{}","tool_call_id":"call_3rqTYrA6H21AYUaRGP4F66oq","id":null,"provider_name":null,"provider_details":null,"args_incomplete":false,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
                                 ),
                             ],
                         ),
@@ -339,7 +339,7 @@ async def test_complex_agent_run_in_workflow(allow_model_requests: None, dbos: D
                             children=[
                                 BasicSpan(content='ctx.run_step=1'),
                                 BasicSpan(
-                                    content='{"part":{"tool_name":"get_product_name","args":"{}","tool_call_id":"call_Xw9XMKBJU48kAAd78WgIswDx","id":null,"provider_name":null,"provider_details":null,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
+                                    content='{"part":{"tool_name":"get_product_name","args":"{}","tool_call_id":"call_Xw9XMKBJU48kAAd78WgIswDx","id":null,"provider_name":null,"provider_details":null,"args_incomplete":false,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
                                 ),
                             ],
                         ),
@@ -415,7 +415,7 @@ async def test_complex_agent_run_in_workflow(allow_model_requests: None, dbos: D
                             children=[
                                 BasicSpan(content='ctx.run_step=2'),
                                 BasicSpan(
-                                    content='{"part":{"tool_name":"get_weather","args":"{\\"city\\":\\"Mexico City\\"}","tool_call_id":"call_Vz0Sie91Ap56nH0ThKGrZXT7","id":null,"provider_name":null,"provider_details":null,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
+                                    content='{"part":{"tool_name":"get_weather","args":"{\\"city\\":\\"Mexico City\\"}","tool_call_id":"call_Vz0Sie91Ap56nH0ThKGrZXT7","id":null,"provider_name":null,"provider_details":null,"args_incomplete":false,"part_kind":"tool-call"},"args_valid":true,"event_kind":"function_tool_call"}'
                                 ),
                             ],
                         ),
@@ -781,8 +781,9 @@ async def test_dbos_agent_run_stream_events(allow_model_requests: None):
             '`agent.run_stream_events()` cannot be used with DBOS. Set an `event_stream_handler` on the agent and use `agent.run()` instead.'
         ),
     ):
-        async for _ in simple_dbos_agent.run_stream_events('What is the capital of Mexico?'):
-            pass
+        async with simple_dbos_agent.run_stream_events('What is the capital of Mexico?') as stream:
+            async for _ in stream:
+                pass
 
 
 async def test_dbos_agent_iter(allow_model_requests: None):
@@ -838,7 +839,8 @@ async def test_dbos_agent_run_stream_in_workflow(allow_model_requests: None, dbo
 async def test_dbos_agent_run_stream_events_in_workflow(allow_model_requests: None, dbos: DBOS):
     @DBOS.workflow()
     async def run_stream_events_workflow():
-        return [event async for event in simple_dbos_agent.run_stream_events('What is the capital of Mexico?')]
+        async with simple_dbos_agent.run_stream_events('What is the capital of Mexico?') as stream:
+            return [event async for event in stream]
 
     with workflow_raises(
         UserError,
