@@ -5435,29 +5435,39 @@ class TestStreamEventsContextManager:
                 pass
 
     async def test_standalone_iteration_works_with_deprecation_warning(self):
-        """Standalone iteration still works but emits a DeprecationWarning."""
-        agent = Agent(TestModel())
+        """Standalone iteration still works end-to-end but emits a DeprecationWarning."""
 
-        events: list[Any] = []
+        async def stream_function(_messages: list[ModelMessage], _info: AgentInfo) -> AsyncIterator[str]:
+            yield 'hello '
+            yield 'world'
+
+        agent = Agent(FunctionModel(stream_function=stream_function))
+        stream_result = agent.run_stream_events('test')
+
+        events: list[AgentStreamEvent | AgentRunResultEvent[str]] = []
         with pytest.warns(DeprecationWarning, match='Iterating `StreamEventsResult` directly is deprecated'):
-            async for event in agent.run_stream_events('Hello'):
+            async for event in stream_result:
                 events.append(event)
 
-        result_event = None
-        for e in events:
-            if isinstance(e, AgentRunResultEvent):
-                result_event = e
-                break
-        assert result_event is not None
-        assert result_event.result.output == snapshot('success (no tool calls)')
+        assert len(events) > 0
+        last_event = events[-1]
+        assert isinstance(last_event, AgentRunResultEvent)
+        assert last_event.result.output == snapshot('hello world')
+        assert stream_result.is_closed
 
     async def test_standalone_iteration_break(self):
         """Breaking out of standalone iteration performs best-effort cleanup."""
-        agent = Agent(TestModel())
 
-        events: list[Any] = []
+        async def stream_function(_messages: list[ModelMessage], _info: AgentInfo) -> AsyncIterator[str]:
+            yield 'hello '
+            yield 'world'
+
+        agent = Agent(FunctionModel(stream_function=stream_function))
+        stream_result = agent.run_stream_events('test')
+
+        events: list[AgentStreamEvent | AgentRunResultEvent[str]] = []
         with pytest.warns(DeprecationWarning):
-            async for event in agent.run_stream_events('Hello'):  # pragma: no branch
+            async for event in stream_result:  # pragma: no branch
                 events.append(event)
                 if len(events) >= 2:
                     break
