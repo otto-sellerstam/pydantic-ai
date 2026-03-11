@@ -5444,8 +5444,8 @@ class TestStreamEventsContextManager:
                 events.append(event)
 
         assert any(isinstance(e, AgentRunResultEvent) for e in events)
-        result_event = next(e for e in events if isinstance(e, AgentRunResultEvent))
-        assert result_event.result.output == snapshot('success (no tool calls)')  # type: ignore[reportUnknownMemberType]
+        result_event: AgentRunResultEvent[str] = next(e for e in events if isinstance(e, AgentRunResultEvent))
+        assert result_event.result.output == snapshot('success (no tool calls)')
 
     async def test_standalone_iteration_break(self):
         """Breaking out of standalone iteration performs best-effort cleanup."""

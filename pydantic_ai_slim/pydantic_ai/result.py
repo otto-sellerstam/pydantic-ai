@@ -436,6 +436,7 @@ class StreamEventsResult(Generic[AgentDepsT, OutputDataT]):
     )
     _managed: bool = field(default=False, init=False)
     _cleaned_up: bool = field(default=False, init=False)
+    _suppress_standalone_warning: bool = field(default=False, init=False)
 
     def __repr__(self) -> str:
         return f'StreamEventsResult(is_closed={self._cleaned_up})'
@@ -505,13 +506,14 @@ class StreamEventsResult(Generic[AgentDepsT, OutputDataT]):
             if self._managed:
                 self._active_iter = self._cm_iterate()
             else:
-                warnings.warn(
-                    'Iterating `StreamEventsResult` directly is deprecated. '
-                    'Use `async with agent.run_stream_events(...) as stream:` instead '
-                    'to ensure proper cleanup.',
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
+                if not self._suppress_standalone_warning:
+                    warnings.warn(
+                        'Iterating `StreamEventsResult` directly is deprecated. '
+                        'Use `async with agent.run_stream_events(...) as stream:` instead '
+                        'to ensure proper cleanup.',
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
                 self._active_iter = self._standalone_iterate()
         return self._active_iter
 
